@@ -14,6 +14,7 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
     ImGui::SFML::Init(window);
 
+    auto fs = cmrc::TheForest::get_filesystem();
 
     int fps = 60;
     window.setFramerateLimit(fps);
