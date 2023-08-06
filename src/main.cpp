@@ -12,7 +12,10 @@ CMRC_DECLARE(TheForest);
 
 int main() {
     sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
-    ImGui::SFML::Init(window);
+    if(!ImGui::SFML::Init(window))
+    {
+        return -1;
+    }
 
     auto fs = cmrc::TheForest::get_filesystem();
 
