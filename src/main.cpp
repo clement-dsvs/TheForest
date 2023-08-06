@@ -19,7 +19,7 @@ int main() {
 
     auto fs = cmrc::TheForest::get_filesystem();
 
-    int fps = 60;
+    int fps = 144;
     window.setFramerateLimit(fps);
 
     sf::Clock deltaClock;
