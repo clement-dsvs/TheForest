@@ -1,55 +1,61 @@
-#include "imgui.h"
-#include "imgui-SFML.h"
-
-#include <SFML/Graphics/CircleShape.hpp>
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/System/Clock.hpp>
-#include <SFML/Window/Event.hpp>
-
-#include <cmrc/cmrc.hpp>
-
-CMRC_DECLARE(TheForest);
+#include <raylib.h>
+#include <valarray>
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(640, 480), "ImGui + SFML = <3");
-    if(!ImGui::SFML::Init(window))
+    InitWindow(1920, 1080, "3D Model");
+    DisableCursor();
+
+    Model model = LoadModel("C:\\Users\\cleme\\Downloads\\Companion-bot\\Package\\Companion-bot.obj");
+    Texture2D texture = LoadTexture("C:\\Users\\cleme\\Downloads\\Companion-bot\\Package\\Companion-bot.png");
+    model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = texture;
+    Camera3D cam = { 0 };
+    cam.position = Vector3{ 50.0f, 50.0f, 50.0f };
+    cam.target = Vector3{ 0, 0, 0 };
+    cam.up = Vector3{ 0, 1, 0 };
+    cam.fovy = 90.f;
+    cam.projection = CAMERA_PERSPECTIVE;
+
+    Vector3 pos = { 0, 0, 0 };
+    BoundingBox bounds = GetMeshBoundingBox(model.meshes[0]);
+
+    SetTargetFPS(144);
+    float rotation = 0.f;
+    while (!WindowShouldClose())
     {
-        return -1;
-    }
+        float left_X = GetGamepadAxisMovement(0, 0);
+        float left_Y = GetGamepadAxisMovement(0, 1);
 
-    auto fs = cmrc::TheForest::get_filesystem();
-
-    int fps = 144;
-    window.setFramerateLimit(fps);
-
-    sf::Clock deltaClock;
-    while (window.isOpen()) {
-        sf::Event event{};
-        while (window.pollEvent(event)) {
-            ImGui::SFML::ProcessEvent(window, event);
-
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
-        }
-
-        ImGui::SFML::Update(window, deltaClock.restart());
-
-        ImGui::Begin("Hello, world!");
-        ImGui::Button("Look at this pretty button");
-
-        if (ImGui::SliderInt("Max Framerate :", &fps, 1, 144))
+        if (!(left_X == 0 && left_Y == 0))
         {
-            window.setFramerateLimit(fps);
+            rotation = std::atan2(left_X, left_Y) * RAD2DEG + 180;
         }
-        ImGui::End();
 
-        window.clear();
-        ImGui::SFML::Render(window);
-        window.display();
+        UpdateCamera(&cam, CAMERA_THIRD_PERSON);
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        BeginMode3D(cam);
+        DrawModelEx(model, pos, Vector3{0, 1, 0}, rotation, Vector3{1, 1, 1}, WHITE);
+
+        DrawCube(Vector3{10, 0, 0}, 2, 2, 2, BLUE);
+        DrawCube(Vector3{0, 0, 10}, 2, 2, 2, RED);
+
+
+        DrawGrid(20, 10.f);
+        DrawBoundingBox(bounds, GREEN);
+        EndMode3D();
+        DrawText("Loading obj file", 10, GetScreenHeight() - 25, 25, DARKGRAY);
+        for (int i = 0; i < GetGamepadAxisCount(0); i++)
+        {
+            DrawText(TextFormat("AXIS %i: %.02f", i, GetGamepadAxisMovement(0, i)), 20, 70 + 20*i, 10, DARKGRAY);
+        }
+        DrawText(TextFormat("Rotation: %.02f", rotation), 20, 200, 10, DARKGRAY);
+        EndDrawing();
     }
 
-    ImGui::SFML::Shutdown();
+    UnloadTexture(texture);
+    UnloadModel(model);
+    CloseWindow();
 
     return 0;
 }
+
